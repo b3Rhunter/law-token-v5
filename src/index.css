@@ -1,0 +1,281 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #eeeaea7d;
+  box-shadow: inset 0 0 5px grey;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #88888852;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #f1f0f069;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color:hsla(288,21%,94%,1);
+  background-image:
+  radial-gradient(at 5% 90%, hsla(180,11%,79%,1) 0px, transparent 50%),
+  radial-gradient(at 91% 18%, hsla(240,26%,79%,1) 0px, transparent 50%),
+  radial-gradient(at 55% 5%, hsla(240,12%,71%,1) 0px, transparent 50%),
+  radial-gradient(at 44% 72%, hsla(316,3%,76%,1) 0px, transparent 50%),
+  radial-gradient(at 83% 15%, hsla(121,5%,60%,1) 0px, transparent 50%),
+  radial-gradient(at 61% 77%, hsla(249,5%,58%,1) 0px, transparent 50%),
+  radial-gradient(at 59% 37%, hsla(54,2%,69%,1) 0px, transparent 50%);
+  color: #525356;
+  font-size: 1.4rem;
+  font-family: 'Roboto Mono', monospace;
+  text-rendering: optimizeLegibility;
+}
+
+body,
+ul,
+ol,
+dl {
+  margin: 0;
+}
+
+article,
+aside,
+audio,
+footer,
+header,
+nav,
+section,
+video {
+  display: block;
+}
+
+h1 {
+  font-size: 1.4rem;
+}
+
+h2 {
+  font-size: 1.3rem;
+}
+
+h3 {
+  font-size: 1.2rem;
+}
+
+p {
+  -ms-word-break: break-all;
+  word-break: break-all;
+  word-break: break-word;
+  -moz-hyphens: auto;
+  -webkit-hyphens: auto;
+  -ms-hyphens: auto;
+  hyphens: auto;
+}
+
+textarea {
+  resize: vertical;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+td {
+  padding: .5rem;
+}
+
+img {
+  border: none;
+  max-width: 100%;
+}
+
+input[type="submit"]::-moz-focus-inner,
+
+input[type="button"]::-moz-focus-inner {
+  border: 0px;
+}
+
+input[type="search"] {
+  appearance: textfield;
+  -webkit-appearance: textfield;
+}
+
+input[type="submit"] {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input:required:after {
+  color: #f00;
+  content: " *";
+}
+
+input[type="email"]:invalid {
+  background: #f00;
+}
+
+.right {
+  float: right;
+  margin-left: 2rem;
+  clear: right;
+}
+
+.left {
+  float: left;
+  margin-right: 2rem;
+  clear: left;
+}
+
+sub,
+sup {
+  line-height: 0;
+}
+
+button p {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color:rgba(25, 23, 23, 0.758)
+}
+
+button {
+  min-width: 7em;
+  padding: 0.75em 1em 0.5em 1em;
+  margin: 0;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+button:active {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(2px);
+}
+
+input {
+  padding: 0.66em 1em;
+  text-align: center;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.parent {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 100svh;
+  min-height: 100vh;
+  width: 100%;
+}
+
+header, section, footer {
+  width: 100%;
+}
+
+header {
+  display:flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1em;
+}
+
+section {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  padding: 1em;
+  min-height: 50vh;
+}
+
+.nav {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  gap: 1em;
+  margin: 1em;
+}
+
+.balances {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  gap: 1em;
+  margin: 1em;
+  font-size: 1.2rem;
+}
+
+.cont {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 1em;
+  gap: 1em;
+}
+
+footer {
+  padding: 1em;
+  text-align: center;
+}
+
+.loading {
+  margin-top: -1em;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  position: fixed;
+  z-index: 99;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+
+.loading.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loader {
+  border: 16px solid #f3f3f372;
+  border-top: 16px solid #ffffff;
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
+}
