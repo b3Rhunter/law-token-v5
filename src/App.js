@@ -134,6 +134,7 @@ function App() {
       await tx.wait();
       fetchBalances();
       showNotification("Successfully Joined!");
+      setHasJoined(true)
     } catch (error) {
       setLoading(false)
       showNotification("Error Joining Platform: " + error.message);
@@ -220,11 +221,12 @@ function App() {
         {connected && (
           <div>
           <div className='nav'>
-            {!hasJoined && <button className='join glass' onClick={openJoin}>Join Platform</button>}
             {isManager && <button className='start glass' onClick={createRewardPool}>Start Round</button>}
             
-          </div><div className='wrapper'>
-              {join && (
+          </div>
+          
+          <div className='wrapper'>
+              {!hasJoined && (
                 <div className='cont'>
                   <input
                     className='glass'
@@ -236,7 +238,7 @@ function App() {
                   <button className='glass' onClick={() => joinPlatform(newUser)}>Register</button>
                 </div>
               )}
-          
+{hasJoined && (
                 <div className='distribute'>
                   <div className="custom-dropdown" onClick={() => setShowDropdown(!showDropdown)}>
                     <button className="custom-dropdown-button distBtn glass">
@@ -265,7 +267,7 @@ function App() {
 
                   <button className='distBtn glass' onClick={distributePoints}>Distribute</button>
                 </div>
-           
+)}
             </div>
             </div>
             )}
