@@ -222,7 +222,7 @@ function App() {
           <div className='nav'>
             {!hasJoined && <button className='join glass' onClick={openJoin}>Join Platform</button>}
             {isManager && <button className='start glass' onClick={createRewardPool}>Start Round</button>}
-            {hasPoints && <button className='distribute glass' onClick={openDistribute}>Give Points</button>}
+            
           </div><div className='wrapper'>
               {join && (
                 <div className='cont'>
@@ -236,10 +236,10 @@ function App() {
                   <button className='glass' onClick={() => joinPlatform(newUser)}>Register</button>
                 </div>
               )}
-              {distribute && (
-                <div className='cont'>
+          
+                <div className='distribute'>
                   <div className="custom-dropdown" onClick={() => setShowDropdown(!showDropdown)}>
-                    <button className="custom-dropdown-button glass">
+                    <button className="custom-dropdown-button distBtn glass">
                       {selectedUserName ? `${selectedUserName} - ${selectedUser.substr(0, 6)}...` : "Select User"}
                     </button>
                     {showDropdown && (
@@ -257,27 +257,27 @@ function App() {
                   </div>
 
                   <input
-                    className='glass'
+                    className='distInput glass'
                     type="text"
                     value={pointsToDistribute}
                     onChange={(e) => setPointsToDistribute(e.target.value)}
                     placeholder="Points to Distribute" />
 
-                  <button className='glass' onClick={distributePoints}>Distribute</button>
+                  <button className='distBtn glass' onClick={distributePoints}>Distribute</button>
                 </div>
-              )}
-            </div><div className='balances'>
-              <p>Points:</p>
-              <p>{pointBalance}</p>
-              <p>Tokens:</p>
-              <p>{tokenBalance}</p>
+           
             </div>
             </div>
             )}
           </section>
           
           <footer className="glass">
-          <h3>@pub-gmn.eth</h3>
+          <div className='balances'>
+              <p>Points:</p>
+              <p>{pointBalance}</p>
+              <p>Tokens:</p>
+              <p>{tokenBalance}</p>
+            </div>
         </footer><Notification
           message={notification.message}
           show={notification.show}
