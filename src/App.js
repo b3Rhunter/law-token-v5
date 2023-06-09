@@ -248,7 +248,7 @@ function App() {
         <div className="loader"></div>
       </div>
       <header className="glass">
-        <img style={{ width: "50px", height: "50px" }} src={logo} alt='logo' />
+        <img className='logo' style={{ width: "50px", height: "50px" }} src={logo} alt='logo' />
         <button className="glass" onClick={connect}>
           {!connected && <p>CONNECT</p>}
           {connected && <p>{userName ? userName : userAddress.substr(0, 6) + "..."}</p>}
