@@ -1,4 +1,20 @@
 // SPDX-License-Identifier: MIT
+
+/*
+  _                          
+ | |                         
+ | |     __ ___      __      
+ | |    / _` \ \ /\ / /      
+ | |___| (_| |\ V  V /       
+ |______\__,_| \_/\_/        
+ |__   __|  | |              
+    | | ___ | | _____ _ __   
+    | |/ _ \| |/ / _ \ '_ \  
+    | | (_) |   <  __/ | | | 
+    |_|\___/|_|\_\___|_| |_| 
+                             
+                             
+*/
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
