@@ -25,6 +25,7 @@ function App() {
   const [isManager, setIsManager] = useState(false);
   const [hasPoints, doesHavePoints] = useState(false);
   const [userName, setUserName] = useState("");
+  const [selectedUserTier, setSelectedUserTier] = useState(null);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({ message: '', show: false });
 
@@ -34,7 +35,7 @@ function App() {
       const provider = new ethers.providers.Web3Provider(window.ethereum)
       await provider.send("eth_requestAccounts", []);
       const signer = provider.getSigner()
-      const address = "0x3c7cF32891B7522b56943002B83a9390f1258309"
+      const address = "0xB27fa868FA4ABDAc196cd4f4606E1c79DA185D86"
       const getContract = new ethers.Contract(address, ABI, signer);
       setContract(getContract)
       const userAddr = await signer.getAddress();
@@ -58,9 +59,12 @@ function App() {
       const userCount = await contract.getUserCount();
       let tempUserList = [];
       let tempUserNameList = [];
+      let tempUserTier = [];
       for (let i = 0; i < userCount; i++) {
         const userAddress = await contract.userList(i);
         const userName = await contract.userNameList(i);
+        const userTier = await contract.getUserTier(userAddress); // pass userAddress instead of i
+        tempUserTier.push(userTier.toString());
         tempUserList.push(userAddress);
         tempUserNameList.push(userName);
       }
@@ -72,6 +76,7 @@ function App() {
     }
     setLoading(false)
   };
+
 
   const fetchBalances = async () => {
     setLoading(true)
@@ -173,6 +178,40 @@ function App() {
     setLoading(false)
   };
 
+  const addManager = async () => {
+    if (isManager && selectedUser) {
+      try {
+        setLoading(true);
+        const tx = await contract.addManager(selectedUser);
+        await tx.wait();
+        showNotification("Added Manager " + selectedUser);
+      } catch (error) {
+        console.error('Error adding manager:', error);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      showNotification("You're not a manager or no user is selected");
+    }
+  };
+
+  const setUserTier = async () => {
+    if (isManager && selectedUser && selectedUserTier !== null) {
+      try {
+        setLoading(true);
+        const tx = await contract.setUserTier(selectedUser, selectedUserTier);
+        await tx.wait();
+        showNotification(`Set ${selectedUserName}'s tier to ${selectedUserTier}`);
+      } catch (error) {
+        console.error('Error setting user tier:', error);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      showNotification("Error setting user's tier. Please try again.");
+    }
+  };
+
   const handleClick = (newValue, newName) => {
     setRecipientAddress(newValue);
     setShowDropdown(false);
@@ -205,28 +244,49 @@ function App() {
 
 
     <main className="parent">
-    <div className={`loading ${loading ? 'show' : ''}`}>
-      <div className="loader"></div>
+      <div className={`loading ${loading ? 'show' : ''}`}>
+        <div className="loader"></div>
       </div>
       <header className="glass">
-        <img style={{width: "50px", height: "50px"}} src={logo} alt='logo'/>
+        <img style={{ width: "50px", height: "50px" }} src={logo} alt='logo' />
         <button className="glass" onClick={connect}>
           {!connected && <p>CONNECT</p>}
           {connected && <p>{userName ? userName : userAddress.substr(0, 6) + "..."}</p>}
         </button>
 
-      </header><section className="glass">
+      </header>
+      
+      <section className="glass">
         {!connected && (
           <p>please connect...</p>
         )}
         {connected && (
           <div>
-          <div className='nav'>
-            {isManager && <button className='start glass' onClick={createRewardPool}>Start Round</button>}
-            
-          </div>
-          
-          <div className='wrapper'>
+            <div className='nav'>
+              {isManager &&
+                <>
+                  <button className="start glass" onClick={createRewardPool}>
+                    Start Round
+                  </button>
+                  <button className="start glass" onClick={addManager}>
+                    Add Manager
+                  </button>
+                  <select className='start glass' onChange={(e) => setSelectedUserTier(e.target.value)}>
+                    <option value="">Select Tier</option>
+                    <option value="0">Trainee Solicitor</option>
+                    <option value="1">Associate</option>
+                    <option value="2">Senior Associate</option>
+                    <option value="3">Senior Counsel</option>
+                    <option value="4">Partner</option>
+                  </select>
+                  <button className="start glass" onClick={setUserTier}>
+                    Set User Tier
+                  </button>
+                </>
+              }
+            </div>
+
+            <div className='wrapper'>
               {!hasJoined && (
                 <div className='cont'>
                   <input
@@ -239,7 +299,7 @@ function App() {
                   <button className='glass' onClick={() => joinPlatform(newUser)}>Register</button>
                 </div>
               )}
-{hasJoined && (
+              {hasJoined && (
                 <div className='distribute'>
                   <div className="custom-dropdown" onClick={() => setShowDropdown(!showDropdown)}>
                     <button className="custom-dropdown-button distBtn glass">
@@ -268,24 +328,26 @@ function App() {
 
                   <button className='distBtn glass' onClick={distributePoints}>Distribute</button>
                 </div>
-)}
+              )}
             </div>
-            </div>
-            )}
-          </section>
-          
-          <footer className="glass">
-          <div className='balances'>
-              <p>Points:</p>
-              <p>{pointBalance}</p>
-              <p>Tokens:</p>
-              <p>{tokenBalance}</p>
-            </div>
-        </footer><Notification
-          message={notification.message}
-          show={notification.show}
-          setShow={(show) => setNotification({ ...notification, show })} />
-      </main>
+          </div>
+        )}
+      </section>
+
+      <footer className="glass">
+        <div className='balances'>
+          <p>Points:</p>
+          <p>{pointBalance}</p>
+          <p>Tokens:</p>
+          <p>{tokenBalance}</p>
+        </div>
+      </footer>
+      
+      <Notification
+        message={notification.message}
+        show={notification.show}
+        setShow={(show) => setNotification({ ...notification, show })} />
+    </main>
   );
 }
 
