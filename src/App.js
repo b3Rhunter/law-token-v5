@@ -35,7 +35,7 @@ function App() {
       const provider = new ethers.providers.Web3Provider(window.ethereum)
       await provider.send("eth_requestAccounts", []);
       const signer = provider.getSigner()
-      const address = "0xB27fa868FA4ABDAc196cd4f4606E1c79DA185D86"
+      const address = "0x54d9Bf7A4e5D4805d93332bE9b4cbEAf692A5e9c"
       const getContract = new ethers.Contract(address, ABI, signer);
       setContract(getContract)
       const userAddr = await signer.getAddress();

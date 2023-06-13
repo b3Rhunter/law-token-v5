@@ -167,6 +167,11 @@ input {
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
+.logo {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
 .parent {
   padding: 1rem;
   display: flex;
@@ -177,11 +182,6 @@ input {
   min-height: 100vh;
   gap: 1em;
   width: 100%;
-}
-
-.logo {
-  background: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
 }
 
 header, section, footer {
