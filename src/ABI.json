@@ -80,13 +80,6 @@
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "createRewardPool",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"inputs": [
 			{
 				"internalType": "address",

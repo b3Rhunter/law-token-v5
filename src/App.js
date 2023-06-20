@@ -34,7 +34,7 @@ function App() {
       const provider = new ethers.providers.Web3Provider(window.ethereum)
       await provider.send("eth_requestAccounts", []);
       const signer = provider.getSigner()
-      const address = "0x072929813c597408a0AF010bDfDc970C08eC4056"
+      const address = "0x4d085aa0Bbd45F439BDd08DFb2429EFa2462Dc8F"
       const getContract = new ethers.Contract(address, ABI, signer);
       setContract(getContract)
       const userAddr = await signer.getAddress();
@@ -135,10 +135,13 @@ function App() {
     if (!contract) return;
     setLoading(true)
     try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum)
+      const signer = provider.getSigner()
+      const userAddr = await signer.getAddress();
       const tx = await contract.joinPlatform(newUser);
       await tx.wait();
       fetchBalances();
-      checkIfUserJoined();
+      checkIfUserJoined(userAddr, contract);
       showNotification("Successfully Joined!");
       setHasJoined(true)
     } catch (error) {
@@ -148,6 +151,8 @@ function App() {
     setLoading(false)
   };
 
+
+  // Need to call this once a month
   const createRewardPool = async () => {
     if (!contract) return;
     setLoading(true)
