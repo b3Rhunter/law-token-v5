@@ -15,6 +15,7 @@
                              
                              
 */
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -38,9 +39,10 @@ contract LawToken is ERC20, Ownable, AccessControl {
     }
 
     mapping(address => User) public users;
+    mapping(address => uint256) public lastMintTime;
     address[] public userList;
     string[] public userNameList;
-    uint256 public constant ROUND_DURATION = 5 minutes;
+    uint256 public constant ROUND_DURATION = 43800 minutes;
 
     uint256 public roundStartTime;
     uint256 public currentRound;
@@ -62,6 +64,7 @@ contract LawToken is ERC20, Ownable, AccessControl {
 
     function joinPlatform(string memory _name) public {
         require(users[msg.sender].points == 0, "User already joined");
+        shouldStartNewRound();
         users[msg.sender].name = _name;
         users[msg.sender].points = 15;
         users[msg.sender].lastRedemptionRound = 0;
@@ -87,6 +90,7 @@ contract LawToken is ERC20, Ownable, AccessControl {
         public
         onlyRole(MANAGER_ROLE)
     {
+        shouldStartNewRound();
         users[_user].tier = _tier;
         uint256 tierPoints = getInitialPointsForTier(_tier);
         if (tierPoints > users[_user].points) {
@@ -94,38 +98,56 @@ contract LawToken is ERC20, Ownable, AccessControl {
         }
     }
 
-    function distributePoints(address _to, uint256 _amount) public {
-        require(users[msg.sender].points >= _amount, "Insufficient points");
-        users[msg.sender].points -= _amount;
-        users[_to].receivedPoints += _amount;
-        uint256 tokensToMint = _amount * (10**18);
-        _mint(_to, tokensToMint);
-    }
+function distributePoints(address _to, uint256 _amount) public {
+    shouldStartNewRound();
+    require(users[msg.sender].points >= _amount, "Insufficient points");
+    users[msg.sender].points -= _amount;
+    users[_to].receivedPoints += _amount;
+    uint256 tokensToMint = _amount * (10**18);
+    _mint(_to, tokensToMint);
+    lastMintTime[_to] = block.timestamp;
+}
 
-    function createRewardPool() public onlyRole(MANAGER_ROLE) {
-        require(
-            block.timestamp >= roundStartTime + ROUND_DURATION,
-            "Current round still active"
-        );
-        roundStartTime = block.timestamp;
-        currentRound += 1;
-        for (uint256 i = 0; i < userList.length; i++) {
-            User storage user = users[userList[i]];
-            user.points = getInitialPointsForTier(user.tier);
-        }
-    }
+function burnExpiredTokens(address _user) public {
+    require(hasRole(MANAGER_ROLE, msg.sender) || msg.sender == _user, "Caller is not a manager or the token owner");
+    require(lastMintTime[_user] + 365 days <= block.timestamp, "Tokens are not old enough to burn");
+    uint256 userBalance = balanceOf(_user);
+    _burn(_user, userBalance);
+    lastMintTime[_user] = 0;
+}
 
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal override {
-        super._beforeTokenTransfer(from, to, amount);
+    function shouldStartNewRound() private returns (bool) {
+    if (block.timestamp >= roundStartTime + ROUND_DURATION) {
+        startNewRound();
+        return true;
+    }
+    return false;
+}
+
+function startNewRound() private {
+    roundStartTime = block.timestamp;
+    currentRound += 1;
+    for (uint256 i = 0; i < userList.length; i++) {
+        User storage user = users[userList[i]];
+        user.points = getInitialPointsForTier(user.tier);
+    }
+}
+
+function _beforeTokenTransfer(
+    address from,
+    address to,
+    uint256 amount
+) internal override {
+    super._beforeTokenTransfer(from, to, amount);
+
+    if (from != address(0)) {
         require(
             to == address(this),
             "LawToken: Tokens can only be sent back to the contract"
         );
+        burnExpiredTokens(from);
     }
+}
 
     function getUserCount() public view returns (uint256) {
         return userList.length;
@@ -148,8 +170,8 @@ contract LawToken is ERC20, Ownable, AccessControl {
     }
 
     function getUserTier(address userAddress) public view returns (Tier) {
-    return users[userAddress].tier;
-}
+        return users[userAddress].tier;
+    }
 
     function removeManager(address manager) public onlyRole(MANAGER_ROLE) {
         revokeRole(MANAGER_ROLE, manager);
