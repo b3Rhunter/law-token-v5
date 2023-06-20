@@ -18,8 +18,6 @@ function App() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedUser, setUser] = useState("select user")
   const [selectedUserName, setSelectedUserName] = useState('');
-  const [distribute, setDistribute] = useState(false)
-  const [join, setJoin] = useState(false)
   const [newUser, setNewUser] = useState('')
   const [hasJoined, setHasJoined] = useState(false);
   const [isManager, setIsManager] = useState(false);
@@ -28,6 +26,7 @@ function App() {
   const [selectedUserTier, setSelectedUserTier] = useState(null);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({ message: '', show: false });
+  const [showAdmin, setShowAdmin] = useState(false);
 
   const connect = async () => {
     setLoading(true)
@@ -35,7 +34,7 @@ function App() {
       const provider = new ethers.providers.Web3Provider(window.ethereum)
       await provider.send("eth_requestAccounts", []);
       const signer = provider.getSigner()
-      const address = "0x54d9Bf7A4e5D4805d93332bE9b4cbEAf692A5e9c"
+      const address = "0x072929813c597408a0AF010bDfDc970C08eC4056"
       const getContract = new ethers.Contract(address, ABI, signer);
       setContract(getContract)
       const userAddr = await signer.getAddress();
@@ -139,6 +138,7 @@ function App() {
       const tx = await contract.joinPlatform(newUser);
       await tx.wait();
       fetchBalances();
+      checkIfUserJoined();
       showNotification("Successfully Joined!");
       setHasJoined(true)
     } catch (error) {
@@ -201,6 +201,7 @@ function App() {
         setLoading(true);
         const tx = await contract.setUserTier(selectedUser, selectedUserTier);
         await tx.wait();
+        fetchBalances();
         showNotification(`Set ${selectedUserName}'s tier to ${selectedUserTier}`);
       } catch (error) {
         console.error('Error setting user tier:', error);
@@ -223,22 +224,20 @@ function App() {
     setNotification({ message, show: true });
   };
 
-  function openDistribute() {
-    setDistribute(true)
-    setJoin(false)
-  }
-
-  function openJoin() {
-    setJoin(true)
-    setDistribute(false)
-  }
-
   useEffect(() => {
     if (connected && contract) {
       fetchBalances();
       fetchUserList();
     }
   }, [connected, contract]);
+
+  function admin() {
+    setShowAdmin(true)
+  }
+
+  function closeAdmin() {
+    setShowAdmin(false)
+  }
 
   return (
 
@@ -255,7 +254,7 @@ function App() {
         </button>
 
       </header>
-      
+
       <section className="glass">
         {!connected && (
           <p>please connect...</p>
@@ -263,25 +262,29 @@ function App() {
         {connected && (
           <div>
             <div className='nav'>
+
               {isManager &&
                 <>
-                  <button className="start glass" onClick={createRewardPool}>
-                    Start Round
-                  </button>
-                  <button className="start glass" onClick={addManager}>
-                    Add Manager
-                  </button>
-                  <select className='start glass' onChange={(e) => setSelectedUserTier(e.target.value)}>
-                    <option value="">Select Tier</option>
-                    <option value="0">Trainee Solicitor</option>
-                    <option value="1">Associate</option>
-                    <option value="2">Senior Associate</option>
-                    <option value="3">Senior Counsel</option>
-                    <option value="4">Partner</option>
-                  </select>
-                  <button className="start glass" onClick={setUserTier}>
-                    Set User Tier
-                  </button>
+                  {!showAdmin && (
+                    <button style={{width: "100%"}} className="start glass" onClick={admin}>Admin</button>
+                  )}
+                  {showAdmin && (
+                  <><button className="start glass" onClick={addManager}>
+                      Add Manager
+                    </button><select className='start glass' onChange={(e) => setSelectedUserTier(e.target.value)}>
+                      <option value="">Select Tier</option>
+                      <option value="0">Trainee Solicitor</option>
+                      <option value="1">Associate</option>
+                      <option value="2">Senior Associate</option>
+                      <option value="3">Senior Counsel</option>
+                      <option value="4">Partner</option>
+                    </select><button className="start glass" onClick={setUserTier}>
+                      Set User Tier
+                    </button>
+                    <button className="start glass" onClick={closeAdmin}>Close</button>
+                    </>
+                  )}
+
                 </>
               }
             </div>
@@ -342,7 +345,7 @@ function App() {
           <p>{tokenBalance}</p>
         </div>
       </footer>
-      
+
       <Notification
         message={notification.message}
         show={notification.show}
