@@ -29,18 +29,54 @@ function App() {
   const [showAdmin, setShowAdmin] = useState(false);
 
   const connect = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum)
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
       await provider.send("eth_requestAccounts", []);
-      const signer = provider.getSigner()
-      const address = "0x78E5Ff6863513EF34A2DCD8700Bbc2De58bFfbE2"
+      const network = await provider.getNetwork();
+  
+      const desiredChainId = '0x89'; // ChainId for Polygon (previously Matic)
+  
+      if (network.chainId !== parseInt(desiredChainId)) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: desiredChainId }],
+          });
+        } catch (switchError) {
+          if (switchError.code === 4902) {
+            try {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: desiredChainId,
+                  chainName: 'Polygon',
+                  nativeCurrency: {
+                    name: 'MATIC',
+                    symbol: 'MATIC',
+                    decimals: 18
+                  },
+                  rpcUrls: ['https://polygon-rpc.com/'],
+                  blockExplorerUrls: ['https://polygonscan.com/'],
+                }],
+              });
+            } catch (addError) {
+              throw addError;
+            }
+          } else {
+            throw switchError;
+          }
+        }
+      }
+  
+      const signer = provider.getSigner();
+      const address = "0x78E5Ff6863513EF34A2DCD8700Bbc2De58bFfbE2";
       const getContract = new ethers.Contract(address, ABI, signer);
-      setContract(getContract)
+      setContract(getContract);
       const userAddr = await signer.getAddress();
       setUserAddress(userAddr);
       await signer.signMessage("Welcome Law-yers!");
-      setConnected(true)
+      setConnected(true);
       checkIfUserJoined(userAddr, getContract);
       checkIfUserIsManager(userAddr, getContract);
       if (hasJoined === true) {
@@ -49,12 +85,14 @@ function App() {
         showNotification("Please register...");
       }
     } catch (error) {
-      setConnected(false)
-      setLoading(false)
-      showNotification(error.message)
+      setConnected(false);
+      setLoading(false);
+      showNotification(error.message);
     }
-    setLoading(false)
-  }
+    setLoading(false);
+  };
+  
+  
 
   const fetchUserList = async () => {
     setLoading(true)
