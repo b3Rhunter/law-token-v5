@@ -79,11 +79,7 @@ function App() {
       setConnected(true);
       checkIfUserJoined(userAddr, getContract);
       checkIfUserIsManager(userAddr, getContract);
-      if (hasJoined === true) {
-        showNotification("Welcome " + userAddr.substr(0, 6) + "...");
-      } else {
-        showNotification("Please register...");
-      }
+      showNotification("Welcome " + userAddr.substr(0, 6) + "...");
     } catch (error) {
       setConnected(false);
       setLoading(false);
