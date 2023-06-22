@@ -98,56 +98,62 @@ contract LawToken is ERC20, Ownable, AccessControl {
         }
     }
 
-function distributePoints(address _to, uint256 _amount) public {
-    shouldStartNewRound();
-    require(users[msg.sender].points >= _amount, "Insufficient points");
-    users[msg.sender].points -= _amount;
-    users[_to].receivedPoints += _amount;
-    uint256 tokensToMint = _amount * (10**18);
-    _mint(_to, tokensToMint);
-    lastMintTime[_to] = block.timestamp;
-}
+    function distributePoints(address _to, uint256 _amount) public {
+        shouldStartNewRound();
+        require(users[msg.sender].points >= _amount, "Insufficient points");
+        users[msg.sender].points -= _amount;
+        users[_to].receivedPoints += _amount;
+        uint256 tokensToMint = _amount * (10**18);
+        _mint(_to, tokensToMint);
+        lastMintTime[_to] = block.timestamp;
+    }
 
-function burnExpiredTokens(address _user) public {
-    require(hasRole(MANAGER_ROLE, msg.sender) || msg.sender == _user, "Caller is not a manager or the token owner");
-    require(lastMintTime[_user] + 365 days <= block.timestamp, "Tokens are not old enough to burn");
-    uint256 userBalance = balanceOf(_user);
-    _burn(_user, userBalance);
-    lastMintTime[_user] = 0;
-}
+    function burnExpiredTokens(address _user) public {
+        require(
+            hasRole(MANAGER_ROLE, msg.sender) || msg.sender == _user,
+            "Caller is not a manager or the token owner"
+        );
+        require(
+            lastMintTime[_user] + 365 days <= block.timestamp,
+            "Tokens are not old enough to burn"
+        );
+        uint256 userBalance = balanceOf(_user);
+        _burn(_user, userBalance);
+        lastMintTime[_user] = 0;
+    }
 
     function shouldStartNewRound() private returns (bool) {
-    if (block.timestamp >= roundStartTime + ROUND_DURATION) {
-        startNewRound();
-        return true;
+        if (block.timestamp >= roundStartTime + ROUND_DURATION) {
+            startNewRound();
+            return true;
+        }
+        return false;
     }
-    return false;
-}
 
-function startNewRound() private {
-    roundStartTime = block.timestamp;
-    currentRound += 1;
-    for (uint256 i = 0; i < userList.length; i++) {
-        User storage user = users[userList[i]];
-        user.points = getInitialPointsForTier(user.tier);
+    function startNewRound() private {
+        roundStartTime = block.timestamp;
+        currentRound += 1;
+        for (uint256 i = 0; i < userList.length; i++) {
+            User storage user = users[userList[i]];
+            user.points = getInitialPointsForTier(user.tier);
+        }
     }
-}
 
-function _beforeTokenTransfer(
-    address from,
-    address to,
-    uint256 amount
-) internal override {
-    super._beforeTokenTransfer(from, to, amount);
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override {
+        super._beforeTokenTransfer(from, to, amount);
 
-    if (from != address(0)) {
-        require(
-            to == address(this),
-            "LawToken: Tokens can only be sent back to the contract"
-        );
-        burnExpiredTokens(from);
+        if (from != address(0)) {
+            require(
+                to == address(this),
+                "LawToken: Tokens can only be sent back to the contract"
+            );
+            burnExpiredTokens(from);
+        }
     }
-}
 
     function getUserCount() public view returns (uint256) {
         return userList.length;
