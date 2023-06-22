@@ -34,16 +34,20 @@ function App() {
       const provider = new ethers.providers.Web3Provider(window.ethereum)
       await provider.send("eth_requestAccounts", []);
       const signer = provider.getSigner()
-      const address = "0x4d085aa0Bbd45F439BDd08DFb2429EFa2462Dc8F"
+      const address = "0x78E5Ff6863513EF34A2DCD8700Bbc2De58bFfbE2"
       const getContract = new ethers.Contract(address, ABI, signer);
       setContract(getContract)
       const userAddr = await signer.getAddress();
       setUserAddress(userAddr);
       await signer.signMessage("Welcome Law-yers!");
       setConnected(true)
-      showNotification("Welcome " + userAddr.substr(0, 6) + "...");
       checkIfUserJoined(userAddr, getContract);
       checkIfUserIsManager(userAddr, getContract);
+      if (hasJoined === true) {
+        showNotification("Welcome " + userAddr.substr(0, 6) + "...");
+      } else {
+        showNotification("Please register...");
+      }
     } catch (error) {
       setConnected(false)
       setLoading(false)
@@ -109,7 +113,6 @@ function App() {
           return;
         }
       }
-      showNotification("Welcome " + userName ? userName : userAddress.substr(0, 6) + "...");
       setHasJoined(false);
     } catch (error) {
       setLoading(false)
@@ -244,6 +247,10 @@ function App() {
     setShowAdmin(false)
   }
 
+  const installMetamask = () => {
+    window.open('https://metamask.io/download.html', '_blank');
+  };
+
   return (
 
 
@@ -253,10 +260,19 @@ function App() {
       </div>
       <header className="glass">
         <img className='logo' style={{ width: "50px", height: "50px" }} src={logo} alt='logo' />
-        <button className="glass" onClick={connect}>
-          {!connected && <p>CONNECT</p>}
-          {connected && <p>{userName ? userName : userAddress.substr(0, 6) + "..."}</p>}
+        
+        {typeof window.ethereum !== 'undefined' ? (
+                <button className="glass" onClick={connect}>
+                {!connected && <p>CONNECT</p>}
+                {connected && <p>{userName ? userName : userAddress.substr(0, 6) + "..."}</p>}
+              </button>
+      ) : (
+        <button className="glass" onClick={installMetamask}>
+          Install Metamask
         </button>
+      )}
+
+
 
       </header>
 
