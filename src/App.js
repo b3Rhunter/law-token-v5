@@ -31,12 +31,11 @@ function App() {
   const connect = async () => {
     setLoading(true);
     try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      let provider;
+      provider = new ethers.providers.Web3Provider(window.ethereum);
       await provider.send("eth_requestAccounts", []);
       const network = await provider.getNetwork();
-  
-      const desiredChainId = '0x89'; // ChainId for Polygon (previously Matic)
-  
+      const desiredChainId = '0x14A33'; // 0x89 polygon
       if (network.chainId !== parseInt(desiredChainId)) {
         try {
           await window.ethereum.request({
@@ -50,14 +49,14 @@ function App() {
                 method: 'wallet_addEthereumChain',
                 params: [{
                   chainId: desiredChainId,
-                  chainName: 'Polygon',
+                  chainName: 'Base Goerli',
                   nativeCurrency: {
-                    name: 'MATIC',
-                    symbol: 'MATIC',
+                    name: 'ETH',
+                    symbol: 'ETH',
                     decimals: 18
                   },
-                  rpcUrls: ['https://polygon-rpc.com/'],
-                  blockExplorerUrls: ['https://polygonscan.com/'],
+                  rpcUrls: ['https://goerli.base.org'],
+                  blockExplorerUrls: ['https://goerli.basescan.org'],
                 }],
               });
             } catch (addError) {
@@ -68,14 +67,14 @@ function App() {
           }
         }
       }
-  
+      provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
-      const address = "0x78E5Ff6863513EF34A2DCD8700Bbc2De58bFfbE2";
+      const address = "0x36D15D2EFB252aD22073cB65ea5f6D4650e8293F";
       const getContract = new ethers.Contract(address, ABI, signer);
       setContract(getContract);
       const userAddr = await signer.getAddress();
       setUserAddress(userAddr);
-      await signer.signMessage("Welcome Law-yers!");
+      await signer.signMessage("Welcome Lawyers!");
       setConnected(true);
       checkIfUserJoined(userAddr, getContract);
       checkIfUserIsManager(userAddr, getContract);
@@ -179,6 +178,7 @@ function App() {
       await tx.wait();
       fetchBalances();
       checkIfUserJoined(userAddr, contract);
+      fetchUserList();
       showNotification("Successfully Joined!");
       setHasJoined(true)
     } catch (error) {
@@ -215,7 +215,7 @@ function App() {
       showNotification("Successfully distributed points!");
     } catch (error) {
       setLoading(false)
-      showNotification("Error:", error);
+      showNotification("Not enough points or invalid user.");
     }
     setLoading(false)
   };
