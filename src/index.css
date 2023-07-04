@@ -86,10 +86,19 @@ img {
   max-width: 100%;
 }
 
+select:active, select:focus {
+  outline: none;
+}
+
+input, input:active, input:focus {
+  outline: none;
+}
+
 input[type="submit"]::-moz-focus-inner,
 
 input[type="button"]::-moz-focus-inner {
   border: 0px;
+  outline: none;
 }
 
 input[type="search"] {
@@ -141,9 +150,10 @@ button {
   margin: 0;
   cursor: pointer;
   transition: 0.3s;
+  outline: none;
 }
 
-button:hover {
+button:hover, select:hover {
   background: rgba(255, 255, 255, 0.4);
   transform: translateY(-2px);
 }
@@ -151,6 +161,7 @@ button:hover {
 button:active {
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(2px);
+  outline: none;
 }
 
 input {
@@ -206,13 +217,30 @@ section {
 }
 
 .nav {
+  z-index: 9999;
+  position: fixed;
+  bottom: 1em;
+  left: 1em;
+
   display: flex;
-  flex-wrap: wrap;
-  flex-direction: row;
-  justify-content: space-evenly;
-  align-items: center;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
   gap: 1em;
-  margin: 1em;
+
+  width: 150px;
+
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.nav button {
+  background-color: rgb(237, 237, 237);
+}
+
+.start {
+  width: 100%;
 }
 
 .balances {
@@ -278,11 +306,14 @@ box-shadow: 0px 20px 30px 0px rgba(0,0,0,0.2);
 
 .custom-dropdown-button, .custom-dropdown {
   width: 100%;
+  outline: none;
 }
 
 select {
   padding: 0.6em 1em;
   font-size: 0.8rem;
+  outline: none;
+  transition: 0.3s;
 }
 
 footer {
@@ -315,6 +346,14 @@ footer {
   visibility: visible;
 }
 
+.admin {
+  position: fixed;
+  bottom: 1em;
+  left: 1em;
+  z-index: 999;
+  width: 150px;
+}
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -327,4 +366,42 @@ footer {
   width: 120px;
   height: 120px;
   animation: spin 2s linear infinite;
+}
+
+.icons {
+  font-size: 1.5em;
+  margin-bottom: -5px;
+  margin-right: 3px;
+}
+
+.closeIcon {
+  font-size: 1.5em;
+}
+
+.whitelistControls {
+  position: absolute;
+  margin-left: 155px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.whitelistControls input,
+.whitelistControls input:active,
+.whitelistControls input:focus  {
+  outline: none;
+  border: 1px solid white;
+}
+
+.submit {
+  margin-top: 0.5em;
+  cursor: pointer;
+  width: 100%;
+}
+
+@media screen and (max-width: 768px) {
+  .admin {
+    width: 50px;
+    bottom: 22vh;
+  }
 }

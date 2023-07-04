@@ -2,7 +2,11 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import ABI from './ABI.json';
 import Notification from './Notification';
-import logo from './images/logo.svg'
+import logo from './images/logo.svg';
+import { GrUserAdmin } from 'react-icons/gr';
+import { AiOutlineCloseCircle } from 'react-icons/ai';
+import { BsPersonAdd } from 'react-icons/bs';
+import { IoIosAddCircleOutline } from 'react-icons/io';
 
 function App() {
 
@@ -27,6 +31,8 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({ message: '', show: false });
   const [showAdmin, setShowAdmin] = useState(false);
+  const [whitelistControls, setWhitelistControls] = useState(false);
+  const [whitelistAddress, setWhitelistAddress] = useState('');
 
   const connect = async () => {
     setLoading(true);
@@ -69,7 +75,7 @@ function App() {
       }
       provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
-      const address = "0x36D15D2EFB252aD22073cB65ea5f6D4650e8293F";
+      const address = "0x34C6d796487272CaCCFbc78842342F4154D235f6";
       const getContract = new ethers.Contract(address, ABI, signer);
       setContract(getContract);
       const userAddr = await signer.getAddress();
@@ -82,12 +88,10 @@ function App() {
     } catch (error) {
       setConnected(false);
       setLoading(false);
-      showNotification(error.message);
+      showNotification('Error connecting wallet...');
     }
     setLoading(false);
   };
-  
-  
 
   const fetchUserList = async () => {
     setLoading(true)
@@ -112,7 +116,6 @@ function App() {
     }
     setLoading(false)
   };
-
 
   const fetchBalances = async () => {
     setLoading(true)
@@ -183,13 +186,11 @@ function App() {
       setHasJoined(true)
     } catch (error) {
       setLoading(false)
-      showNotification("Error Joining Platform: " + error.message);
+      showNotification("Error Joining Platform: ");
     }
     setLoading(false)
   };
 
-
-  // Need to call this once a month
   const createRewardPool = async () => {
     if (!contract) return;
     setLoading(true)
@@ -226,7 +227,7 @@ function App() {
         setLoading(true);
         const tx = await contract.addManager(selectedUser);
         await tx.wait();
-        showNotification("Added Manager " + selectedUser);
+        showNotification("Added Manager " + selectedUser.substr(0, 6) + "...");
       } catch (error) {
         console.error('Error adding manager:', error);
       } finally {
@@ -244,9 +245,9 @@ function App() {
         const tx = await contract.setUserTier(selectedUser, selectedUserTier);
         await tx.wait();
         fetchBalances();
-        showNotification(`Set ${selectedUserName}'s tier to ${selectedUserTier}`);
+        showNotification(`${selectedUserName}'s tier updated`);
       } catch (error) {
-        console.error('Error setting user tier:', error);
+        console.error('Error setting user tier');
       } finally {
         setLoading(false);
       }
@@ -285,29 +286,82 @@ function App() {
     window.open('https://metamask.io/download.html', '_blank');
   };
 
+  const toggleWhitelist = async () => {
+    if (!contract) return;
+    setLoading(true);
+    try {
+      const tx = await contract.toggleWhitelist();
+      await tx.wait();
+      showNotification("Whitelist toggled!");
+    } catch (error) {
+      showNotification("Error toggling whitelist: " + error.message);
+      console.error(error);
+    }
+    setLoading(false);
+  };
+
+  const addToWhitelist = async (address) => {
+    if (!contract) return;
+    setLoading(true);
+    try {
+      const tx = await contract.addToWhitelist(address);
+      await tx.wait();
+      showNotification("Address added to whitelist!");
+    } catch (error) {
+      showNotification("Error adding to whitelist: " + error.message);
+      console.error(error);
+    }
+    setLoading(false);
+  };
+
+  const removeFromWhitelist = async (address) => {
+    if (!contract) return;
+    setLoading(true);
+    try {
+      const tx = await contract.removeFromWhitelist(address);
+      await tx.wait();
+      showNotification("Address removed from whitelist!");
+    } catch (error) {
+      showNotification("Error removing from whitelist: " + error.message);
+      console.error(error);
+    }
+    setLoading(false);
+  };
+
+  function showWhiteListControls() {
+    setWhitelistControls(true)
+  }
+
+  function closeWhitelistControls() {
+    setWhitelistControls(false)
+  }
+
+  const handleWhitelistAddressChange = (event) => {
+    setWhitelistAddress(event.target.value);
+  };
+
+  const handleWhitelistAddition = (event) => {
+    event.preventDefault();
+    addToWhitelist(whitelistAddress);
+  };
+
   return (
-
-
     <main className="parent">
       <div className={`loading ${loading ? 'show' : ''}`}>
         <div className="loader"></div>
       </div>
       <header className="glass">
         <img className='logo' style={{ width: "50px", height: "50px" }} src={logo} alt='logo' />
-        
         {typeof window.ethereum !== 'undefined' ? (
-                <button className="glass" onClick={connect}>
-                {!connected && <p>CONNECT</p>}
-                {connected && <p>{userName ? userName : userAddress.substr(0, 6) + "..."}</p>}
-              </button>
-      ) : (
-        <button className="glass" onClick={installMetamask}>
-          Install Metamask
-        </button>
-      )}
-
-
-
+          <button className="glass" onClick={connect}>
+            {!connected && <p>CONNECT</p>}
+            {connected && <p>{userName ? userName : userAddress.substr(0, 6) + "..."}</p>}
+          </button>
+        ) : (
+          <button className="glass" onClick={installMetamask}>
+            Install Metamask
+          </button>
+        )}
       </header>
 
       <section className="glass">
@@ -316,33 +370,6 @@ function App() {
         )}
         {connected && (
           <div>
-            <div className='nav'>
-
-              {isManager &&
-                <>
-                  {!showAdmin && (
-                    <button style={{width: "100%"}} className="start glass" onClick={admin}>Admin</button>
-                  )}
-                  {showAdmin && (
-                  <><button className="start glass" onClick={addManager}>
-                      Add Manager
-                    </button><select className='start glass' onChange={(e) => setSelectedUserTier(e.target.value)}>
-                      <option value="">Select Tier</option>
-                      <option value="0">Trainee Solicitor</option>
-                      <option value="1">Associate</option>
-                      <option value="2">Senior Associate</option>
-                      <option value="3">Senior Counsel</option>
-                      <option value="4">Partner</option>
-                    </select><button className="start glass" onClick={setUserTier}>
-                      Set User Tier
-                    </button>
-                    <button className="start glass" onClick={closeAdmin}>Close</button>
-                    </>
-                  )}
-
-                </>
-              }
-            </div>
 
             <div className='wrapper'>
               {!hasJoined && (
@@ -376,14 +403,12 @@ function App() {
                       </div>
                     )}
                   </div>
-
                   <input
                     className='distInput glass'
                     type="text"
                     value={pointsToDistribute}
                     onChange={(e) => setPointsToDistribute(e.target.value)}
                     placeholder="Points to Distribute" />
-
                   <button className='distBtn glass' onClick={distributePoints}>Distribute</button>
                 </div>
               )}
@@ -400,6 +425,53 @@ function App() {
           <p>{tokenBalance}</p>
         </div>
       </footer>
+
+      {connected && (
+        <div className='nav'>
+          {isManager &&
+            <>
+              {!showAdmin && (
+                <button className="admin glass" onClick={admin}><GrUserAdmin className='closeIcon' /></button>
+              )}
+              {showAdmin && (
+
+                <>
+                  {!whitelistControls && (
+                    <button className='start glass' onClick={showWhiteListControls}>whitelist</button>
+                  )}
+                  {whitelistControls && (
+                    <button className='start glass' onClick={closeWhitelistControls}>whitelist</button>
+                  )}
+                  {whitelistControls && (
+                    <div className='whitelistControls'>
+                      <button className='glass start' onClick={toggleWhitelist}>toggle whitelist</button>
+                      <form onSubmit={handleWhitelistAddition}>
+                        <input type='text' placeholder='whitelist address' onChange={handleWhitelistAddressChange} />
+                        <input className='submit' type='submit' value='Add to whitelist' />
+                      </form>
+                    </div>
+                  )}
+                  <button className="start glass" onClick={addManager}>
+                    <BsPersonAdd className='icons' />
+                    Manager
+                  </button>
+                  <select className='start glass' onChange={(e) => setSelectedUserTier(e.target.value)}>
+                    <option value="0">Trainee Solicitor</option>
+                    <option value="1">Associate</option>
+                    <option value="2">Senior Associate</option>
+                    <option value="3">Senior Counsel</option>
+                    <option value="4">Partner</option>
+                  </select><button className="start glass" onClick={setUserTier}>
+                    <IoIosAddCircleOutline className='icons' />
+                    Tier
+                  </button>
+                  <button className="start glass" onClick={closeAdmin}><AiOutlineCloseCircle className='closeIcon' /></button>
+                </>
+              )}
+            </>
+          }
+        </div>
+      )}
 
       <Notification
         message={notification.message}

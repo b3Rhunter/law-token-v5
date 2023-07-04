@@ -10,6 +10,9 @@
     transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
     transform: translateY(100%);
     opacity: 0;
+    max-width: 300px;
+    word-wrap: break-word;
+    font-size: 0.8em;
   }
   
   .notification-container.show {
