@@ -40,6 +40,7 @@ contract LawToken is ERC20, Ownable, AccessControl {
 
     mapping(address => User) public users;
     mapping(address => uint256) public lastMintTime;
+    mapping(address => bool) public whitelist;
     address[] public userList;
     string[] public userNameList;
     uint256 public constant ROUND_DURATION = 43800 minutes;
@@ -48,6 +49,7 @@ contract LawToken is ERC20, Ownable, AccessControl {
     uint256 public currentRound;
 
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
+    bool public isWhitelistActive = false;
     bool private initialized = false;
 
     constructor() ERC20("Law Token", "LAW") {
@@ -64,6 +66,10 @@ contract LawToken is ERC20, Ownable, AccessControl {
 
     function joinPlatform(string memory _name) public {
         require(users[msg.sender].points == 0, "User already joined");
+        require(
+            !isWhitelistActive || whitelist[msg.sender],
+            "Address not whitelisted"
+        );
         shouldStartNewRound();
         users[msg.sender].name = _name;
         users[msg.sender].points = 15;
@@ -101,6 +107,10 @@ contract LawToken is ERC20, Ownable, AccessControl {
     function distributePoints(address _to, uint256 _amount) public {
         shouldStartNewRound();
         require(users[msg.sender].points >= _amount, "Insufficient points");
+        require(
+            _to != msg.sender,
+            "Users cannot distribute points to themselves"
+        );
         users[msg.sender].points -= _amount;
         users[_to].receivedPoints += _amount;
         uint256 tokensToMint = _amount * (10**18);
@@ -137,6 +147,21 @@ contract LawToken is ERC20, Ownable, AccessControl {
             User storage user = users[userList[i]];
             user.points = getInitialPointsForTier(user.tier);
         }
+    }
+
+    function addToWhitelist(address _address) public onlyRole(MANAGER_ROLE) {
+        whitelist[_address] = true;
+    }
+
+    function removeFromWhitelist(address _address)
+        public
+        onlyRole(MANAGER_ROLE)
+    {
+        whitelist[_address] = false;
+    }
+
+    function toggleWhitelist() public onlyRole(MANAGER_ROLE) {
+        isWhitelistActive = !isWhitelistActive;
     }
 
     function _beforeTokenTransfer(
@@ -178,6 +203,12 @@ contract LawToken is ERC20, Ownable, AccessControl {
     function getUserTier(address userAddress) public view returns (Tier) {
         return users[userAddress].tier;
     }
+
+    function removeManager(address manager) public onlyRole(MANAGER_ROLE) {
+        revokeRole(MANAGER_ROLE, manager);
+    }
+}
+
 
     function removeManager(address manager) public onlyRole(MANAGER_ROLE) {
         revokeRole(MANAGER_ROLE, manager);
