@@ -7,6 +7,8 @@ import { GrUserAdmin } from 'react-icons/gr';
 import { AiOutlineCloseCircle } from 'react-icons/ai';
 import { BsPersonAdd } from 'react-icons/bs';
 import { IoIosAddCircleOutline } from 'react-icons/io';
+import { FcCurrencyExchange } from 'react-icons/fc';
+import Accounting from './Accounting';
 
 function App() {
 
@@ -33,6 +35,8 @@ function App() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [whitelistControls, setWhitelistControls] = useState(false);
   const [whitelistAddress, setWhitelistAddress] = useState('');
+  const [userListFetched, setUserListFetched] = useState(false);
+  const [accounting, setAccounting] = useState(false);
 
   const connect = async () => {
     setLoading(true);
@@ -103,13 +107,14 @@ function App() {
       for (let i = 0; i < userCount; i++) {
         const userAddress = await contract.userList(i);
         const userName = await contract.userNameList(i);
-        const userTier = await contract.getUserTier(userAddress); // pass userAddress instead of i
+        const userTier = await contract.getUserTier(userAddress);
         tempUserTier.push(userTier.toString());
         tempUserList.push(userAddress);
         tempUserNameList.push(userName);
       }
       setUserList(tempUserList);
       setUserNameList(tempUserNameList);
+      setUserListFetched(true);
     } catch (error) {
       setLoading(false)
       console.error('Error fetching user list:', error);
@@ -345,8 +350,42 @@ function App() {
     addToWhitelist(whitelistAddress);
   };
 
+  const addTokenToMetaMask = async () => {
+    try {
+      const wasAdded = await window.ethereum.request({
+        method: 'wallet_watchAsset',
+        params: {
+          type: 'ERC20',
+          options: {
+            address: '0x34C6d796487272CaCCFbc78842342F4154D235f6',
+            symbol: 'LAW',
+            decimals: '18',
+            image: 'https://github.com/b3Rhunter/law-token-logo/raw/main/lawTokenLogo.png',
+          },
+        },
+      });
+  
+      if (wasAdded) {
+        console.log('Token was added!');
+      } else {
+        console.log('Token was not added');
+      }
+    } catch (error) {
+      console.log('Error adding token to MetaMask:', error);
+    }
+  };
+
+  function openAccounting() {
+    setAccounting(true)
+  }
+
+  function closeAccounting() {
+    setAccounting(false)
+  }
+
   return (
     <main className="parent">
+      <button className='addToken' onClick={addTokenToMetaMask}><FcCurrencyExchange/></button>
       <div className={`loading ${loading ? 'show' : ''}`}>
         <div className="loader"></div>
       </div>
@@ -465,6 +504,13 @@ function App() {
                     <IoIosAddCircleOutline className='icons' />
                     Tier
                   </button>
+                  {!accounting && (
+                    <button onClick={openAccounting} className="start glass">Accounting</button>
+                  )}
+                  {accounting && (
+                    <button onClick={closeAccounting} className="start glass">Accounting</button>
+                  )}
+                  
                   <button className="start glass" onClick={closeAdmin}><AiOutlineCloseCircle className='closeIcon' /></button>
                 </>
               )}
@@ -472,6 +518,14 @@ function App() {
           }
         </div>
       )}
+
+      {accounting && (
+        <div>
+            {userListFetched && <Accounting contract={contract} userList={userList} />}
+        </div>
+      )}
+      
+
 
       <Notification
         message={notification.message}
