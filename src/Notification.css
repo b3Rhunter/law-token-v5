@@ -19,4 +19,8 @@
     transform: translateY(0);
     opacity: 1;
   }
+
+.message {
+    color: white !important;
+}
   
