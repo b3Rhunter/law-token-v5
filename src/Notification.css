@@ -13,14 +13,11 @@
     max-width: 300px;
     word-wrap: break-word;
     font-size: 0.8em;
+    z-index: 9999;
   }
   
   .notification-container.show {
     transform: translateY(0);
     opacity: 1;
   }
-
-.message {
-    color: white !important;
-}
   

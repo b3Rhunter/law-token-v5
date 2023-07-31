@@ -13,7 +13,7 @@ const Notification = ({ message, show, setShow }) => {
 
   return (
     <div className={`notification-container ${show ? 'show' : 'hide'}`}>
-      <p className='message'>{message}</p>
+      <p>{message}</p>
     </div>
   );
 };

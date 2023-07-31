@@ -37,6 +37,8 @@ function App() {
   const [whitelistAddress, setWhitelistAddress] = useState('');
   const [userListFetched, setUserListFetched] = useState(false);
   const [accounting, setAccounting] = useState(false);
+  const [distributionReason, setDistributionReason] = useState('');
+  const [userReceipts, setUserReceipts] = useState([]);
 
   const connect = async () => {
     setLoading(true);
@@ -79,7 +81,7 @@ function App() {
       }
       provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
-      const address = "0x34C6d796487272CaCCFbc78842342F4154D235f6";
+      const address = "0xD3F3A3cD0695160C82e57AB329631dB7DaB84338";
       const getContract = new ethers.Contract(address, ABI, signer);
       setContract(getContract);
       const userAddr = await signer.getAddress();
@@ -96,6 +98,15 @@ function App() {
     }
     setLoading(false);
   };
+
+  const fetchUserReceipts = async () => {
+    try {
+      const receipts = await contract.getUserReceipts(userAddress);
+      setUserReceipts(receipts);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   const fetchUserList = async () => {
     setLoading(true)
@@ -215,7 +226,7 @@ function App() {
     if (!contract) return;
     setLoading(true)
     try {
-      const tx = await contract.distributePoints(recipientAddress, pointsToDistribute);
+      const tx = await contract.distributePoints(recipientAddress, pointsToDistribute, distributionReason);
       await tx.wait();
       fetchBalances();
       showNotification("Successfully distributed points!");
@@ -276,6 +287,7 @@ function App() {
     if (connected && contract) {
       fetchBalances();
       fetchUserList();
+      fetchUserReceipts();
     }
   }, [connected, contract]);
 
@@ -364,7 +376,7 @@ function App() {
           },
         },
       });
-  
+
       if (wasAdded) {
         console.log('Token was added!');
       } else {
@@ -385,7 +397,7 @@ function App() {
 
   return (
     <main className="parent">
-      <button className='addToken' onClick={addTokenToMetaMask}><FcCurrencyExchange/></button>
+      <button className='addToken' onClick={addTokenToMetaMask}><FcCurrencyExchange /></button>
       <div className={`loading ${loading ? 'show' : ''}`}>
         <div className="loader"></div>
       </div>
@@ -424,31 +436,57 @@ function App() {
                 </div>
               )}
               {hasJoined && (
-                <div className='distribute'>
-                  <div className="custom-dropdown" onClick={() => setShowDropdown(!showDropdown)}>
-                    <button className="custom-dropdown-button distBtn glass">
-                      {selectedUserName ? `${selectedUserName} - ${selectedUser.substr(0, 6)}...` : "Select User"}
-                    </button>
-                    {showDropdown && (
-                      <div className="custom-dropdown-content">
-                        {userList.map((userAddress, index) => (
-                          <div
-                            key={userAddress}
-                            onClick={() => handleClick(userAddress, userNameList[index])}
-                          >
-                            {userNameList[index]} - {userAddress.substr(0, 6) + "..."}
-                          </div>
-                        ))}
-                      </div>
+                <div className='main-container'>
+                  <div className='distribute'>
+                    <div className="custom-dropdown" onClick={() => setShowDropdown(!showDropdown)}>
+                      <button className="custom-dropdown-button distBtn glass">
+                        {selectedUserName ? `${selectedUserName} - ${selectedUser.substr(0, 6)}...` : "Select User"}
+                      </button>
+                      {showDropdown && (
+                        <div className="custom-dropdown-content">
+                          {userList.map((userAddress, index) => (
+                            <div
+                              key={userAddress}
+                              onClick={() => handleClick(userAddress, userNameList[index])}
+                            >
+                              {userNameList[index]} - {userAddress.substr(0, 6) + "..."}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      className='distInput glass'
+                      type="text"
+                      value={pointsToDistribute}
+                      onChange={(e) => setPointsToDistribute(e.target.value)}
+                      placeholder="Points to Distribute" />
+                    <input
+                      className='distInput glass'
+                      type="text"
+                      value={distributionReason}
+                      onChange={(e) => setDistributionReason(e.target.value)}
+                      placeholder="Reason for Distribution"
+                    />
+
+                    <button className='distBtn glass' onClick={distributePoints}>Distribute</button>
+                  </div>
+
+                  <div className='user-transactions'>
+                    {userReceipts.length > 0 ? (
+                      userReceipts.slice().reverse().map((receipt, index) => (
+                        <div key={index} className="transaction-item">
+                          <p>Received: <span>{receipt.amount.toString()}</span></p>
+                          <p>Reason: <span>{receipt.reason}</span></p>
+                          <p>Date: <span>{new Date(receipt.timestamp * 1000).toLocaleString()}</span></p>
+                        </div>
+                      ))
+                    ) : (
+                      <p style={{paddingLeft: "5px"}}>No transactions found.</p>
                     )}
                   </div>
-                  <input
-                    className='distInput glass'
-                    type="text"
-                    value={pointsToDistribute}
-                    onChange={(e) => setPointsToDistribute(e.target.value)}
-                    placeholder="Points to Distribute" />
-                  <button className='distBtn glass' onClick={distributePoints}>Distribute</button>
+
+
                 </div>
               )}
             </div>
@@ -510,7 +548,7 @@ function App() {
                   {accounting && (
                     <button onClick={closeAccounting} className="start glass">Accounting</button>
                   )}
-                  
+
                   <button className="start glass" onClick={closeAdmin}><AiOutlineCloseCircle className='closeIcon' /></button>
                 </>
               )}
@@ -521,11 +559,9 @@ function App() {
 
       {accounting && (
         <div>
-            {userListFetched && <Accounting contract={contract} userList={userList} />}
+          {userListFetched && <Accounting contract={contract} userList={userList} />}
         </div>
       )}
-      
-
 
       <Notification
         message={notification.message}
