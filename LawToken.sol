@@ -30,12 +30,20 @@ contract LawToken is ERC20, Ownable, AccessControl {
         SeniorCounsel,
         Partner
     }
+
     struct User {
         string name;
         Tier tier;
         uint256 points;
         uint256 receivedPoints;
         uint256 lastRedemptionRound;
+        TokenReceipt[] receipts;
+    }
+
+    struct TokenReceipt {
+        uint256 amount;
+        string reason;
+        uint256 timestamp;
     }
 
     mapping(address => User) public users;
@@ -51,6 +59,13 @@ contract LawToken is ERC20, Ownable, AccessControl {
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
     bool public isWhitelistActive = false;
     bool private initialized = false;
+
+    event PointsDistributed(
+        address indexed from,
+        address indexed to,
+        uint256 amount,
+        string reason
+    );
 
     constructor() ERC20("Law Token", "LAW") {
         roundStartTime = block.timestamp;
@@ -104,7 +119,11 @@ contract LawToken is ERC20, Ownable, AccessControl {
         }
     }
 
-    function distributePoints(address _to, uint256 _amount) public {
+    function distributePoints(
+        address _to,
+        uint256 _amount,
+        string memory reason
+    ) public {
         shouldStartNewRound();
         require(users[msg.sender].points >= _amount, "Insufficient points");
         require(
@@ -116,6 +135,13 @@ contract LawToken is ERC20, Ownable, AccessControl {
         uint256 tokensToMint = _amount * (10**18);
         _mint(_to, tokensToMint);
         lastMintTime[_to] = block.timestamp;
+        emit PointsDistributed(msg.sender, _to, _amount, reason);
+        TokenReceipt memory receipt = TokenReceipt({
+            amount: _amount,
+            reason: reason,
+            timestamp: block.timestamp
+        });
+        users[_to].receipts.push(receipt);
     }
 
     function burnExpiredTokens(address _user) public {
@@ -172,10 +198,17 @@ contract LawToken is ERC20, Ownable, AccessControl {
         super._beforeTokenTransfer(from, to, amount);
 
         if (from != address(0)) {
-            require(
-                to == address(this),
-                "LawToken: Tokens can only be sent back to the contract"
-            );
+            if (isWhitelistActive) {
+                require(
+                    to == address(this) || whitelist[to],
+                    "LawToken: Tokens can only be sent back to the contract or to a whitelisted address"
+                );
+            } else {
+                require(
+                    to == address(this),
+                    "LawToken: Tokens can only be sent back to the contract"
+                );
+            }
             burnExpiredTokens(from);
         }
     }
@@ -207,10 +240,12 @@ contract LawToken is ERC20, Ownable, AccessControl {
     function removeManager(address manager) public onlyRole(MANAGER_ROLE) {
         revokeRole(MANAGER_ROLE, manager);
     }
-}
 
-
-    function removeManager(address manager) public onlyRole(MANAGER_ROLE) {
-        revokeRole(MANAGER_ROLE, manager);
+    function getUserReceipts(address userAddress)
+        public
+        view
+        returns (TokenReceipt[] memory)
+    {
+        return users[userAddress].receipts;
     }
 }
