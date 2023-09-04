@@ -10,6 +10,8 @@ import { IoIosAddCircleOutline } from 'react-icons/io';
 import { FcCurrencyExchange } from 'react-icons/fc';
 import Accounting from './Accounting';
 
+ const address = "0x2fc8BFfe57AA1Be2793EC5Dd98D52d957cd91Cc7"; 
+
 function App() {
 
   const [connected, setConnected] = useState(false);
@@ -47,7 +49,7 @@ function App() {
       provider = new ethers.providers.Web3Provider(window.ethereum);
       await provider.send("eth_requestAccounts", []);
       const network = await provider.getNetwork();
-      const desiredChainId = '0x14A33'; // 0x89 polygon
+      const desiredChainId = '0x89'; // 0x89 polygon   -   0x14A33 base goerli
       if (network.chainId !== parseInt(desiredChainId)) {
         try {
           await window.ethereum.request({
@@ -63,12 +65,12 @@ function App() {
                   chainId: desiredChainId,
                   chainName: 'Base Goerli',
                   nativeCurrency: {
-                    name: 'ETH',
-                    symbol: 'ETH',
+                    name: 'Matic',
+                    symbol: 'MATIC',
                     decimals: 18
                   },
-                  rpcUrls: ['https://goerli.base.org'],
-                  blockExplorerUrls: ['https://goerli.basescan.org'],
+                  rpcUrls: ['https://polygon.llamarpc.com'], // https://polygon-rpc.com/ - https://goerli.base.org
+                  blockExplorerUrls: ['https://polyscan.com'], // https://polyscan.com - https://goerli.basescan.org
                 }],
               });
             } catch (addError) {
@@ -81,7 +83,6 @@ function App() {
       }
       provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
-      const address = "0xD3F3A3cD0695160C82e57AB329631dB7DaB84338";
       const getContract = new ethers.Contract(address, ABI, signer);
       setContract(getContract);
       const userAddr = await signer.getAddress();
@@ -369,7 +370,7 @@ function App() {
         params: {
           type: 'ERC20',
           options: {
-            address: '0x34C6d796487272CaCCFbc78842342F4154D235f6',
+            address: address,
             symbol: 'LAW',
             decimals: '18',
             image: 'https://github.com/b3Rhunter/law-token-logo/raw/main/lawTokenLogo.png',
