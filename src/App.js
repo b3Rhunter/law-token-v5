@@ -10,7 +10,7 @@ import { IoIosAddCircleOutline } from 'react-icons/io';
 import { FcCurrencyExchange } from 'react-icons/fc';
 import Accounting from './Accounting';
 
- const address = "0xcE08e6e160D780ae780ABB1a7d33A5bb6ACAFCd9"; 
+ const address = "0x1F6Aa4d5eCC3e0649EcEAfCfd712db72bC11Ad1F"; 
 
 function App() {
 
@@ -177,9 +177,8 @@ function App() {
   const checkIfUserIsManager = async (userAddress, contractToUse) => {
     setLoading(true)
     try {
-      const managerRole = await contractToUse.MANAGER_ROLE();
-      const isUserManager = await contractToUse.hasRole(managerRole, userAddress);
-      setIsManager(isUserManager);
+      const managerRole = await contractToUse.manager(userAddress);
+      setIsManager(managerRole);
     } catch (error) {
       setLoading(false)
       console.error('Error checking if user is manager:', error);
