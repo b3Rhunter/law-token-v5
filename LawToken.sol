@@ -20,9 +20,8 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract LawToken is ERC20, Ownable, AccessControl {
+contract LawToken is ERC20, Ownable {
     enum Tier {
         TraineeSolicitor,
         Associate,
@@ -63,7 +62,7 @@ contract LawToken is ERC20, Ownable, AccessControl {
     uint256 public roundStartTime;
     uint256 public currentRound;
 
-    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
+    mapping(address => bool) public manager;
     bool public isWhitelistActive = false;
     bool private initialized = false;
 
@@ -79,11 +78,20 @@ contract LawToken is ERC20, Ownable, AccessControl {
         currentRound = 1;
     }
 
-    function initializeRoles() public onlyOwner {
-        require(!initialized, "Roles have already been initialized");
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(MANAGER_ROLE, _msgSender());
-        initialized = true;
+function initializeRoles() public onlyOwner {
+    require(!initialized, "Roles have already been initialized");
+    manager[_msgSender()] = true;
+    initialized = true;
+}
+
+    modifier onlyManager() {
+        require(manager[_msgSender()] == true, "Caller is not a manager");
+     _;
+    }
+
+    modifier onlyOwnerOrManager() {
+        require(owner() == _msgSender() || manager[_msgSender()] == true, "Caller is neither the owner nor a manager");
+        _;
     }
 
     function joinPlatform(string memory _name) public {
@@ -116,7 +124,7 @@ contract LawToken is ERC20, Ownable, AccessControl {
 
     function setUserTier(address _user, Tier _tier)
         public
-        onlyRole(MANAGER_ROLE)
+        onlyManager
     {
         shouldStartNewRound();
         users[_user].tier = _tier;
@@ -161,26 +169,27 @@ function distributePoints(
     users[_to].receipts.push(receipt);
 }
 
-    function burnExpiredTokens(address _user) public {
-        require(
-            hasRole(MANAGER_ROLE, msg.sender) || msg.sender == _user,
-            "Caller is not a manager or the token owner"
-        );
-        
-        uint256 totalBurnable = 0;
-        uint256 currentTime = block.timestamp;
-        
-        for (uint256 i = 0; i < tokenBatches[_user].length; i++) {
-            if (currentTime >= tokenBatches[_user][i].timestamp + 365 days) {
-                totalBurnable += tokenBatches[_user][i].amount;
-                delete tokenBatches[_user][i];
-            }
+function burnExpiredTokens(address _user) public {
+    require(
+        msg.sender == _user,
+        "Caller is not the token owner"
+    );
+    
+    uint256 totalBurnable = 0;
+    uint256 currentTime = block.timestamp;
+    
+    for (uint256 i = 0; i < tokenBatches[_user].length; i++) {
+        if (currentTime >= tokenBatches[_user][i].timestamp + 365 days) {
+            totalBurnable += tokenBatches[_user][i].amount;
+            delete tokenBatches[_user][i];
         }
-        
-        require(totalBurnable > 0, "No tokens to burn");
-        
+    }
+    
+    if(totalBurnable > 0) {
         _burn(_user, totalBurnable);
     }
+}
+
 
     function shouldStartNewRound() private returns (bool) {
         if (block.timestamp >= roundStartTime + ROUND_DURATION) {
@@ -199,43 +208,44 @@ function distributePoints(
         }
     }
 
-    function addToWhitelist(address _address) public onlyRole(MANAGER_ROLE) {
+    function addToWhitelist(address _address) public onlyManager {
         whitelist[_address] = true;
     }
 
     function removeFromWhitelist(address _address)
         public
-        onlyRole(MANAGER_ROLE)
+        onlyManager
     {
         whitelist[_address] = false;
     }
 
-    function toggleWhitelist() public onlyRole(MANAGER_ROLE) {
+    function toggleWhitelist() public onlyManager {
         isWhitelistActive = !isWhitelistActive;
     }
 
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal override {
-        super._beforeTokenTransfer(from, to, amount);
+function _beforeTokenTransfer(
+    address from,
+    address to,
+    uint256 amount
+) internal override {
+    super._beforeTokenTransfer(from, to, amount);
 
-        if (from != address(0)) {
-            if (isWhitelistActive) {
-                require(
-                    to == address(this) || whitelist[to],
-                    "LawToken: Tokens can only be sent back to the contract or to a whitelisted address"
-                );
-            } else {
-                require(
-                    to == address(this),
-                    "LawToken: Tokens can only be sent back to the contract"
-                );
-            }
-            //burnExpiredTokens(from);
+    if (from != address(0)) {
+        if (isWhitelistActive) {
+            require(
+                to == address(this) || whitelist[to],
+                "LawToken: Tokens can only be sent back to the contract or to a whitelisted address"
+            );
+        } else {
+            require(
+                to == address(this),
+                "LawToken: Tokens can only be sent back to the contract"
+            );
         }
+        burnExpiredTokens(from);
     }
+}
+
 
     function getUserCount() public view returns (uint256) {
         return userList.length;
@@ -252,17 +262,17 @@ function distributePoints(
     {
         return users[userAddress].receivedPoints;
     }
+function addManager(address newManager) public onlyOwnerOrManager {
+    manager[newManager] = true;
+}
 
-    function addManager(address newManager) public onlyRole(MANAGER_ROLE) {
-        grantRole(MANAGER_ROLE, newManager);
-    }
+function removeManager(address managerToRemove) public onlyOwnerOrManager {
+    require(manager[managerToRemove] == true, "Address is not a manager");
+    manager[managerToRemove] = false;
+}
 
     function getUserTier(address userAddress) public view returns (Tier) {
         return users[userAddress].tier;
-    }
-
-    function removeManager(address manager) public onlyRole(MANAGER_ROLE) {
-        revokeRole(MANAGER_ROLE, manager);
     }
 
     function getUserReceipts(address userAddress)
