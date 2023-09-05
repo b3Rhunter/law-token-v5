@@ -10,7 +10,7 @@ import { IoIosAddCircleOutline } from 'react-icons/io';
 import { FcCurrencyExchange } from 'react-icons/fc';
 import Accounting from './Accounting';
 
- const address = "0x1F6Aa4d5eCC3e0649EcEAfCfd712db72bC11Ad1F"; 
+ const address = "0x42884740FF9be348b5c2f8F6b6369Bf1c16dDAb3"; 
 
 function App() {
 
@@ -49,7 +49,7 @@ function App() {
       provider = new ethers.providers.Web3Provider(window.ethereum);
       await provider.send("eth_requestAccounts", []);
       const network = await provider.getNetwork();
-      const desiredChainId = '0x14A33'; // 0x89 polygon   -   0x14A33 base goerli
+      const desiredChainId = '0x89'; // 0x89 polygon   -   0x14A33 base goerli
       if (network.chainId !== parseInt(desiredChainId)) {
         try {
           await window.ethereum.request({
@@ -63,14 +63,14 @@ function App() {
                 method: 'wallet_addEthereumChain',
                 params: [{
                   chainId: desiredChainId,
-                  chainName: 'Base Goerli',
+                  chainName: 'Polygon',
                   nativeCurrency: {
                     name: 'Matic',
                     symbol: 'MATIC',
                     decimals: 18
                   },
                   rpcUrls: ['https://polygon.llamarpc.com'], // https://polygon.llamarpc.com - https://goerli.base.org
-                  blockExplorerUrls: ['https://goerli.basescan.org'], // https://polygonscan.com - https://goerli.basescan.org
+                  blockExplorerUrls: ['https://polygonscan.com'], // https://polygonscan.com - https://goerli.basescan.org
                 }],
               });
             } catch (addError) {
