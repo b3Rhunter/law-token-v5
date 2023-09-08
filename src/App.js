@@ -10,7 +10,7 @@ import { IoIosAddCircleOutline } from 'react-icons/io';
 import { FcCurrencyExchange } from 'react-icons/fc';
 import Accounting from './Accounting';
 
- const address = "0x42884740FF9be348b5c2f8F6b6369Bf1c16dDAb3"; 
+ const address = "0x3B96fEdDC98206Ceda604659634494415cEFC9ad"; 
 
 function App() {
 
