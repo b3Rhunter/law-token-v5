@@ -212,6 +212,12 @@ function burnExpiredTokens(address _user) public {
         whitelist[_address] = true;
     }
 
+    function addToWhitelistBulk(address[] memory _addresses) public onlyManager {
+        for (uint256 i = 0; i < _addresses.length; i++) {
+            whitelist[_addresses[i]] = true;
+        }
+    }
+
     function removeFromWhitelist(address _address)
         public
         onlyManager
